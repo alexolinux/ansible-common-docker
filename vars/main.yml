@@ -1,0 +1,10 @@
+---
+# vars file for common-docker
+user: sysadmin
+group: docker
+host1: {}
+host2: {}
+host3: {}
+ip1: {}
+ip2: {}
+ip3: {}

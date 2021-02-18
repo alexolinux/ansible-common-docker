@@ -1,0 +1,83 @@
+---
+
+- name: Add mappings to /etc/hosts
+  blockinfile:
+    path: /etc/hosts
+    block: |
+      {{ item.ip }} {{ item.name }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+  loop:
+    - { name: "{{ host1 }}", ip: "{{ ip1 }}" }
+    - { name: "{{ host2 }}", ip: "{{ ip1 }}" }
+    - { name: "{{ host3 }}", ip: "{{ ip1 }}" }
+  tags: [ add_host ]
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  tags: [ selinux ]
+
+- name: Disable swap for current session
+  command: swapoff -a
+  become: true
+  tags: [ swapoff ]
+
+- name: Disable swap permanently, persist reboots
+  replace:
+    path: /etc/fstab
+    regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
+    replace: '#\1\2\3swap\4'
+    backup: yes
+  tags: [ disable_swap ]
+
+- name: Enable EPEL Repository on CentOS 7
+  yum:
+    name: epel-release
+    state: latest
+  when: ansible_facts['os_family'] == 'RedHat' and ansible_facts ['distribution_major_version'] == '7'
+  tags: [ epel ]
+
+- name: Enable docker repo in yum
+  template: src=docker.repo.j2 dest=/etc/yum.repos.d/docker.repo
+  tags: [ docker_repo ]
+
+- name: Upgrade all packages
+  yum:
+    name: "*"
+    state: latest
+  tags: [ yum_update ]
+
+- name: Install a list of Common packages
+  yum:
+    name:
+      - yum-utils
+      - wget
+      - net-tools
+    state: present
+  tags: [ packages ]
+
+- name: docker-ce Installation
+  yum:
+    name:
+      - lvm2
+      - device-mapper
+      - device-mapper-persistent-data
+      - docker
+    state: present
+  notify: "Start docker"
+  tags: [ install_docker ]
+
+- name: Ensure group "docker" exists with correct gid
+  group:
+    name: "{{ group }}"
+    state: present
+    gid: 1750
+  tags: [ group_docker ]
+
+- name: Add the user to group
+  user:
+    name: "{{ user }}"
+    groups: [ "{{ group }}" ]
+    append: yes
+  #ignore_errors: true
+  tags: [ add_group ]

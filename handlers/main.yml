@@ -1,0 +1,8 @@
+---
+# handlers file for common-docker
+- name: start docker daemon
+  service: 
+    name: docker
+    state: started
+    enabled: yes
+  listen: "Start docker"
