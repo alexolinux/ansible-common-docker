@@ -1,7 +1,7 @@
 Role common-docker
 =========
 
-This is a simple role to install requirements and docker-ce daemon in Centos 7.
+This is a simple role to install requirements and docker-ce daemon for Centos 7.
 
 Role Variables
 --------------
